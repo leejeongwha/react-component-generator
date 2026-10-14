@@ -396,6 +396,19 @@
   color: #1d4ed8;
 }
 
+.example-chip--history {
+  background: var(--surface);
+  border-style: dashed;
+  color: var(--text-muted);
+}
+
+.example-chip--history:hover {
+  background: var(--primary-soft);
+  border-color: #bfdbfe;
+  border-style: dashed;
+  color: #1d4ed8;
+}
+
 .error-banner {
   padding: 14px 16px;
   background: #fef2f2;

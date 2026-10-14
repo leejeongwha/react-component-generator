@@ -1,21 +1,38 @@
 import { useState, useCallback } from 'react';
 import type { GeneratedComponent, Provider } from '../types';
+import { useLocalStorage } from './useLocalStorage';
+
+const STORAGE_KEY = 'rcg:components';
+const MAX_STORED = 20;
+
+function deserializeComponents(raw: string): GeneratedComponent[] {
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed)) return [];
+  return (parsed as Array<Omit<GeneratedComponent, 'createdAt'> & { createdAt: string }>).map((c) => ({
+    ...c,
+    createdAt: new Date(c.createdAt),
+  }));
+}
 
 interface UseComponentGeneratorReturn {
   components: GeneratedComponent[];
   isLoading: boolean;
   error: string | null;
-  generate: (prompt: string, apiKey: string | undefined, provider: Provider) => Promise<void>;
+  generate: (prompt: string, apiKey: string | undefined, provider: Provider) => Promise<boolean>;
   removeComponent: (id: string) => void;
   clearAll: () => void;
 }
 
 export function useComponentGenerator(): UseComponentGeneratorReturn {
-  const [components, setComponents] = useState<GeneratedComponent[]>([]);
+  const [components, setComponents] = useLocalStorage<GeneratedComponent[]>(
+    STORAGE_KEY,
+    [],
+    deserializeComponents,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generate = useCallback(async (prompt: string, apiKey: string | undefined, provider: Provider) => {
+  const generate = useCallback(async (prompt: string, apiKey: string | undefined, provider: Provider): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
 
@@ -39,22 +56,24 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
         createdAt: new Date(),
       };
 
-      setComponents((prev) => [newComponent, ...prev]);
+      setComponents((prev) => [newComponent, ...prev].slice(0, MAX_STORED));
+      return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
+      return false;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [setComponents]);
 
   const removeComponent = useCallback((id: string) => {
     setComponents((prev) => prev.filter((c) => c.id !== id));
-  }, []);
+  }, [setComponents]);
 
   const clearAll = useCallback(() => {
     setComponents([]);
-  }, []);
+  }, [setComponents]);
 
   return { components, isLoading, error, generate, removeComponent, clearAll };
 }
