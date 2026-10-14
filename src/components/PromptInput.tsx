@@ -74,9 +74,9 @@ export function PromptInput({ onGenerate, isLoading, promptHistory = [] }: Promp
       {promptHistory.length > 0 && (
         <div className="prompt-examples">
           <span className="examples-label">최근 프롬프트</span>
-          {promptHistory.slice(0, 5).map((item) => (
+          {promptHistory.slice(0, 5).map((item, i) => (
             <button
-              key={item}
+              key={i}
               className="example-chip example-chip--history"
               onClick={() => handleExampleClick(item)}
               type="button"

@@ -53,6 +53,7 @@ function App() {
 
   const handleProviderChange = (newProvider: Provider) => {
     setProvider(newProvider);
+    setShowKey(false);
   };
 
   const activeProvider = PROVIDER_CONFIG[provider].label;

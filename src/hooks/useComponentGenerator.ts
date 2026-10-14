@@ -6,8 +6,12 @@ const STORAGE_KEY = 'rcg:components';
 const MAX_STORED = 20;
 
 function deserializeComponents(raw: string): GeneratedComponent[] {
-  const parsed = JSON.parse(raw) as Array<Omit<GeneratedComponent, 'createdAt'> & { createdAt: string }>;
-  return parsed.map((c) => ({ ...c, createdAt: new Date(c.createdAt) }));
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed)) return [];
+  return (parsed as Array<Omit<GeneratedComponent, 'createdAt'> & { createdAt: string }>).map((c) => ({
+    ...c,
+    createdAt: new Date(c.createdAt),
+  }));
 }
 
 interface UseComponentGeneratorReturn {
@@ -61,15 +65,15 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [setComponents]);
 
   const removeComponent = useCallback((id: string) => {
     setComponents((prev) => prev.filter((c) => c.id !== id));
-  }, []);
+  }, [setComponents]);
 
   const clearAll = useCallback(() => {
     setComponents([]);
-  }, []);
+  }, [setComponents]);
 
   return { components, isLoading, error, generate, removeComponent, clearAll };
 }
