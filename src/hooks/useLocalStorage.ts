@@ -29,25 +29,29 @@ export function useLocalStorage<T>(
     } catch {
       setStoredValue(initialValue);
     }
-    // initialValue와 deserialize는 호출부에서 안정적인 값을 전달해야 한다
+    // initialValue·deserialize는 호출부에서 안정적인 참조를 전달해야 한다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
+  // localStorage 동기화를 state updater 바깥 effect에서 수행한다
+  // updater 내부 side effect는 React Strict Mode에서 두 번 실행되어 stale 값을 쓸 수 있다
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(storedValue));
+    } catch {
+      // localStorage 사용 불가(시크릿 모드 등)일 때 무시
+    }
+  }, [key, storedValue]);
+
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
-      setStoredValue((prev) => {
+      setStoredValue((prev) =>
         // instanceof Function 대신 typeof를 사용한다:
-        // T가 함수 타입일 때 instanceof Function이 updater로 잘못 처리되는 것을 방지한다
-        const next = typeof value === 'function' ? (value as (prev: T) => T)(prev) : value;
-        try {
-          window.localStorage.setItem(key, JSON.stringify(next));
-        } catch {
-          // localStorage 사용 불가(시크릿 모드 등)일 때 무시
-        }
-        return next;
-      });
+        // T가 함수 타입일 때 instanceof가 updater로 잘못 처리되는 것을 방지한다
+        typeof value === 'function' ? (value as (prev: T) => T)(prev) : value,
+      );
     },
-    [key],
+    [],
   );
 
   return [storedValue, setValue];
