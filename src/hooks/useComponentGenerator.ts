@@ -1,5 +1,14 @@
 import { useState, useCallback } from 'react';
 import type { GeneratedComponent, Provider } from '../types';
+import { useLocalStorage } from './useLocalStorage';
+
+const STORAGE_KEY = 'rcg:components';
+const MAX_STORED = 20;
+
+function deserializeComponents(raw: string): GeneratedComponent[] {
+  const parsed = JSON.parse(raw) as Array<Omit<GeneratedComponent, 'createdAt'> & { createdAt: string }>;
+  return parsed.map((c) => ({ ...c, createdAt: new Date(c.createdAt) }));
+}
 
 interface UseComponentGeneratorReturn {
   components: GeneratedComponent[];
@@ -11,7 +20,11 @@ interface UseComponentGeneratorReturn {
 }
 
 export function useComponentGenerator(): UseComponentGeneratorReturn {
-  const [components, setComponents] = useState<GeneratedComponent[]>([]);
+  const [components, setComponents] = useLocalStorage<GeneratedComponent[]>(
+    STORAGE_KEY,
+    [],
+    deserializeComponents,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +52,7 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
         createdAt: new Date(),
       };
 
-      setComponents((prev) => [newComponent, ...prev]);
+      setComponents((prev) => [newComponent, ...prev].slice(0, MAX_STORED));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
