@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { validatePromptLength, PROMPT_MAX_LENGTH } from '../utils/validatePrompt';
 
 interface PromptInputProps {
   onGenerate: (prompt: string) => void;
@@ -17,9 +18,12 @@ const EXAMPLES = [
 export function PromptInput({ onGenerate, isLoading }: PromptInputProps) {
   const [prompt, setPrompt] = useState('');
 
+  const validation = validatePromptLength(prompt);
+  const isOverLimit = !validation.ok;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (prompt.trim() && !isLoading) {
+    if (prompt.trim() && !isLoading && !isOverLimit) {
       onGenerate(prompt.trim());
     }
   };
@@ -39,7 +43,7 @@ export function PromptInput({ onGenerate, isLoading }: PromptInputProps) {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="예: 고객 목록 테이블 위에 들어갈 검색 필터 바를 만들어줘. 상태, 담당자, 날짜 범위 필터가 필요해."
-          className="prompt-textarea"
+          className={`prompt-textarea${isOverLimit ? ' prompt-textarea--error' : ''}`}
           rows={3}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -47,10 +51,17 @@ export function PromptInput({ onGenerate, isLoading }: PromptInputProps) {
             }
           }}
         />
+        <div className="prompt-meta">
+          {isOverLimit ? (
+            <span className="prompt-error">{validation.message}</span>
+          ) : (
+            <span className="prompt-count">{prompt.length} / {PROMPT_MAX_LENGTH}</span>
+          )}
+        </div>
         <button
           type="submit"
           className="btn-generate"
-          disabled={!prompt.trim() || isLoading}
+          disabled={!prompt.trim() || isLoading || isOverLimit}
         >
           {isLoading ? (
             <span className="loading-spinner">생성 중...</span>

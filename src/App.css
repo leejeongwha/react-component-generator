@@ -269,8 +269,27 @@
 .prompt-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: end;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 6px;
+}
+
+.prompt-form .prompt-textarea {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.prompt-form .prompt-meta {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.prompt-form .btn-generate {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
 }
 
 .prompt-textarea {
@@ -312,6 +331,26 @@
   opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.prompt-count {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.prompt-error {
+  font-size: 0.8rem;
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.prompt-textarea--error {
+  border-color: var(--danger) !important;
+  outline-color: var(--danger);
+}
+
+.prompt-textarea--error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
 }
 
 .loading-spinner {
