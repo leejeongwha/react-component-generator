@@ -36,16 +36,19 @@ function App() {
 
   const hasEnvKey = envKeys[provider];
 
-  const handleGenerate = (prompt: string) => {
+  const handleGenerate = async (prompt: string) => {
     if (!apiKey.trim() && !hasEnvKey) {
       alert(`${PROVIDER_CONFIG[provider].label} API 키를 입력하거나 .env에 설정해주세요.`);
       return;
     }
-    generate(prompt, apiKey || undefined, provider);
-    setPromptHistory((prev) => {
-      const filtered = prev.filter((p) => p !== prompt);
-      return [prompt, ...filtered].slice(0, 10);
-    });
+    const ok = await generate(prompt, apiKey || undefined, provider);
+    // API 호출이 성공한 경우에만 히스토리에 기록한다
+    if (ok) {
+      setPromptHistory((prev) => {
+        const filtered = prev.filter((p) => p !== prompt);
+        return [prompt, ...filtered].slice(0, 5);
+      });
+    }
   };
 
   const handleProviderChange = (newProvider: Provider) => {

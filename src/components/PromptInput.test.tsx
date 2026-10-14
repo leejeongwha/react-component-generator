@@ -26,4 +26,46 @@ describe('PromptInput', () => {
     render(<PromptInput onGenerate={vi.fn()} isLoading={true} />);
     expect(screen.getByRole('button', { name: '생성 중...' })).toBeDisabled();
   });
+
+  describe('promptHistory', () => {
+    it('히스토리가 없으면 최근 프롬프트 섹션을 표시하지 않는다', () => {
+      render(<PromptInput onGenerate={vi.fn()} isLoading={false} promptHistory={[]} />);
+      expect(screen.queryByText('최근 프롬프트')).not.toBeInTheDocument();
+    });
+
+    it('히스토리가 있으면 최근 프롬프트 섹션을 표시한다', () => {
+      render(
+        <PromptInput
+          onGenerate={vi.fn()}
+          isLoading={false}
+          promptHistory={['버튼 컴포넌트', '카드 레이아웃']}
+        />,
+      );
+      expect(screen.getByText('최근 프롬프트')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '버튼 컴포넌트' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '카드 레이아웃' })).toBeInTheDocument();
+    });
+
+    it('히스토리 칩을 클릭하면 textarea에 해당 프롬프트가 채워진다', async () => {
+      const user = userEvent.setup();
+      render(
+        <PromptInput
+          onGenerate={vi.fn()}
+          isLoading={false}
+          promptHistory={['버튼 컴포넌트']}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: '버튼 컴포넌트' }));
+      expect(screen.getByRole('textbox')).toHaveValue('버튼 컴포넌트');
+    });
+
+    it('히스토리가 5개를 넘어도 최대 5개만 표시된다', () => {
+      const history = ['A', 'B', 'C', 'D', 'E', 'F'];
+      render(<PromptInput onGenerate={vi.fn()} isLoading={false} promptHistory={history} />);
+      // 최근 프롬프트 칩 6개 중 5개만 렌더링
+      expect(screen.queryByRole('button', { name: 'F' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'E' })).toBeInTheDocument();
+    });
+  });
 });
